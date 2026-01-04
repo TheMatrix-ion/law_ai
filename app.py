@@ -26,7 +26,7 @@ os.environ['HTTPS_PROXY'] = 'http://127.0.0.1:33210'
 
 # --- 关键：使用缓存加载模型 ---
 # 加上 @st.cache_resource 装饰器，
-# 这样每次你发消息时，不用重新加载 4GB 的数据库和模型，速度飞快！
+# 这样每次发消息时，不用重新加载 4GB 的数据库和模型，速度飞快！
 @st.cache_resource
 def load_chain():
     print("正在初始化模型资源...")
@@ -44,7 +44,7 @@ def load_chain():
         return None
         
     vector_db = FAISS.load_local(DB_PATH, embeddings, allow_dangerous_deserialization=True)
-    # 增加分数过滤，避免瞎回答
+    # 增加分数过滤，避免乱答
     retriever = vector_db.as_retriever(
         search_type="similarity_score_threshold",
         search_kwargs={"score_threshold": 0.3, "k": 3}
@@ -57,7 +57,7 @@ def load_chain():
     template = """
     你是一名专业的中国法律顾问。请必须严格依据下方的【参考法律条文】来回答用户的问题。
     
-    ⚠️ 严禁使用自带知识编造！如果参考条文中没有相关内容，或者分数过低，请直接回答“抱歉，当前法律知识库中未收录相关法条，无法回答。”
+    严禁使用自带知识编造！如果参考条文中没有相关内容，或者分数过低，请直接回答“抱歉，当前法律知识库中未收录相关法条，无法回答。”
 
     【参考法律条文】：
     {context}
@@ -66,6 +66,7 @@ def load_chain():
     {question}
 
     【专业回答】：
+    请一步步分析法律依据，最后给出结论。
     """
     prompt = ChatPromptTemplate.from_template(template)
     
@@ -82,7 +83,7 @@ def load_chain():
     
     return rag_chain
 
-# 加载链条（这一步只会运行一次）
+# 加载链条
 chain = load_chain()
 
 # --- 聊天界面逻辑 ---

@@ -30,7 +30,7 @@ def create_db():
             source_name = os.path.splitext(file_name)[0]
             
             for doc in docs:
-                # 关键：把来源存进 metadata，先别改 page_content
+                # 关键：把来源存进 metadata
                 doc.metadata["source_name"] = source_name
             
             all_raw_docs.extend(docs)
@@ -46,7 +46,7 @@ def create_db():
     )
     split_docs = text_splitter.split_documents(all_raw_docs)
     
-    # 3. 🔥🔥 注入阶段：切完后再给每个碎片盖章 🔥🔥
+    # 3. 注入阶段：切完后再给每个碎片盖章
     print("3. 正在给每个切片注入来源标签...")
     for chunk in split_docs:
         # 从 metadata 里取回刚才存的名字
@@ -54,7 +54,7 @@ def create_db():
         # 把它硬编码进正文开头
         chunk.page_content = f"【法律来源：{source}】\n{chunk.page_content}"
 
-    print(f"   处理完成！共生成 {len(split_docs)} 个带标签的切片。")
+    print(f"共生成 {len(split_docs)} 个带标签的切片。")
 
     # 4. 向量化阶段
     print(f"4. 正在构建向量库 ({EMBEDDING_MODEL})...")
@@ -69,7 +69,7 @@ def create_db():
 
     vector_db = FAISS.from_documents(split_docs, embeddings)
     vector_db.save_local(DB_SAVE_PATH)
-    print(f">>> 恭喜！数据库已重建，每个切片都带上了身份证！")
+    print(f">>> 数据库构建完成")
 
 if __name__ == "__main__":
     create_db()
